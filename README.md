@@ -1,20 +1,56 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Aegis Triage
+>_ Zero-Latency Semantic Routing for Crisis Response.
 
-# Run and deploy your AI Studio app
+**BaseLayer AI** is an independent studio focused on rapid prototyping and zero-bloat backend intelligence. We build the foundational data architectures, AI pipelines, and semantic routing powering high-stakes enterprise logistics.
 
-This contains everything you need to run your app locally.
+---
 
-View your app in AI Studio: https://ai.studio/apps/de22d768-b042-4d4d-81a6-1c8aa7193f1f
+### The Problem
+When a crisis occurs, the operational bottleneck is rarely a lack of resources, but rather a **Visibility Gap**. Analog communications, unstructured transcripts, and raw field notes create data silos, delaying critical triage and resource allocation by hours or days. 
 
-## Run Locally
+### The Solution
+Aegis Triage bridges this gap. By ingesting unstructured data streams, Aegis utilizes autonomous Generative AI to structure intelligence in real-time, instantly routing critical field needs to optimal on-the-ground resources via localized semantic vectorization.
 
-**Prerequisites:**  Node.js
+### Technical Stack
+* **Intelligence:** Google Gemini 3.0 Pro (Extraction) & Gemini Embeddings (Routing)
+* **Frontend:** React + TypeScript + Tailwind CSS (True Black Aesthetic)
+* **Backend:** Node.js + Express
+* **Deployment:** Vercel Edge Network
 
+### Key Features
+* **Zero-Latency Ingestion:** Parse continuous, unstructured analog field reports and transcripts instantly.
+* **Semantic Vector Mapping:** Map arbitrary supply and logistical requests to personnel skillsets via mathematical cosine similarity.
+* **High-Contrast UI:** Distraction-free, terminal-grade True Black aesthetic optimized for low-bandwidth and high-stress environments.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Architecture
+```text
+[ Raw Field Input ] 
+        |
+        v
+[ Gemini Parsing Node (Structuring) ]
+        |
+        v
+[ Semantic Vector Matching (Embeddings) ]
+        |
+        v
+[ Dispatch / UI State ]
+```
+
+### Getting Started
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Environment Setup**
+   A valid Google GenAI API key is required to initialize the node. Create a `.env` file in the root directory:
+   ```env
+   GOOGLE_GENAI_API_KEY="your_api_key_here"
+   GEMINI_API_KEY="your_api_key_here"
+   ```
+
+3. **Initialize Environment**
+   ```bash
+   npm run dev
+   ```
