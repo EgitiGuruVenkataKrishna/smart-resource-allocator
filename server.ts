@@ -29,15 +29,15 @@ app.use(express.json());
 interface FieldReport {
   report_id: string;
   location: string;
-  needs: string[];
-  urgency: number; // 1-5
+  required_vectors: string[];
+  urgency_level: number; // 1-5
   raw_text: string;
 }
 
 interface VolunteerProfile {
   volunteer_id: string;
   name: string;
-  skills: string[];
+  required_vectors: string[];
   region: string;
   capacity: number;
 }
@@ -50,21 +50,21 @@ const volunteers: VolunteerProfile[] = [
   {
     volunteer_id: "v1",
     name: "Kiran",
-    skills: ["first-aid", "driving", "logistics"],
+    required_vectors: ["first-aid", "driving", "logistics"],
     region: "Vijayawada",
     capacity: 5
   },
   {
     volunteer_id: "v2",
     name: "Sita",
-    skills: ["translation", "childcare", "nursing"],
+    required_vectors: ["translation", "childcare", "nursing"],
     region: "Guntur",
     capacity: 8
   },
   {
     volunteer_id: "v3",
     name: "Rahul",
-    skills: ["manual-labor", "construction", "driving"],
+    required_vectors: ["manual-labor", "construction", "driving"],
     region: "Vijayawada",
     capacity: 10
   }
@@ -98,7 +98,7 @@ app.post("/api/reports", async (req, res) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Extract the field report data from the following text based on the required schema. Ensure urgency is an integer from 1 to 5.
+      contents: `Extract the field report data from the following text based on the required schema. Ensure urgency_level is an integer from 1 to 5.
       
       Text: "${rawText}"
       `,
@@ -109,14 +109,14 @@ app.post("/api/reports", async (req, res) => {
           description: "Structured extraction of a field report.",
           properties: {
             location: { type: Type.STRING, description: "The mentioned location or region." },
-            needs: { 
+            required_vectors: { 
               type: Type.ARRAY, 
               items: { type: Type.STRING },
-              description: "Specific needs mentioned, e.g., 'medical supplies', 'translator'."
+              description: "Specific required vectors or needs mentioned, e.g., 'medical supplies', 'translator'."
             },
-            urgency: { type: Type.INTEGER, description: "Urgency level from 1 (lowest) to 5 (highest)." }
+            urgency_level: { type: Type.INTEGER, description: "Urgency level from 1 (lowest) to 5 (highest)." }
           },
-          required: ["location", "needs", "urgency"]
+          required: ["location", "required_vectors", "urgency_level"]
         }
       }
     });
@@ -129,8 +129,8 @@ app.post("/api/reports", async (req, res) => {
     const fieldReport: FieldReport = {
       report_id,
       location: extractedData.location || "Unknown",
-      needs: extractedData.needs || [],
-      urgency: extractedData.urgency || 1,
+      required_vectors: extractedData.required_vectors || [],
+      urgency_level: extractedData.urgency_level || 1,
       raw_text: rawText
     };
 
@@ -166,8 +166,8 @@ app.get("/api/matches/:reportId", async (req, res) => {
   }
 
   try {
-    // 1. Embed the report's needs
-    const reportNeedsText = report.needs.join(", ");
+    // 1. Embed the report's required_vectors
+    const reportNeedsText = report.required_vectors.join(", ");
     
     let reportEmbedding: number[] = [];
     if (reportNeedsText.trim()) {
@@ -178,10 +178,10 @@ app.get("/api/matches/:reportId", async (req, res) => {
       reportEmbedding = embedResponse.embeddings?.[0]?.values || [];
     }
 
-    // 2. Embed each volunteer's skills and compare
+    // 2. Embed each volunteer's required_vectors and compare
     // Note: In an optimized environment, volunteer embeddings would be pre-calculated and cached.
     const scoredVolunteers = await Promise.all(volunteers.map(async (vol) => {
-      const volSkillsText = vol.skills.join(", ");
+      const volSkillsText = vol.required_vectors.join(", ");
       let volEmbedding: number[] = [];
       let similarityScore = 0;
 

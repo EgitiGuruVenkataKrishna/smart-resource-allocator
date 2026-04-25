@@ -5,15 +5,15 @@ import { motion, AnimatePresence } from 'motion/react';
 interface FieldReport {
   report_id: string;
   location: string;
-  needs: string[];
-  urgency: number; // 1-5
+  required_vectors: string[];
+  urgency_level: number; // 1-5
   raw_text: string;
 }
 
 interface VolunteerProfile {
   volunteer_id: string;
   name: string;
-  skills: string[];
+  required_vectors: string[];
   region: string;
   capacity: number;
 }
@@ -31,14 +31,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-[#FAF9F6] font-sans selection:bg-[#FAF9F6] selection:text-black">
+    <div className="min-h-screen bg-black text-[#FAF9F6] font-mono selection:bg-[#FAF9F6] selection:text-black flex flex-col">
       <header className="border-b border-[#FAF9F6]/20 py-4 px-6 mb-8">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-sm border border-[#FAF9F6] text-[#FAF9F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-none border border-[#FAF9F6] text-[#FAF9F6] flex items-center justify-center">
               <Network size={16} />
             </div>
-            <span className="font-mono text-sm tracking-widest uppercase">CoordiNode_</span>
+            <span className="font-mono text-sm tracking-widest uppercase">AEGIS_TRIAGE_</span>
           </div>
           {report && (
             <button 
@@ -76,6 +76,10 @@ export default function App() {
           )}
         </AnimatePresence>
       </main>
+
+      <footer className="mt-auto border-t border-[#FAF9F6]/20 py-6 text-center text-[#FAF9F6]/40 font-mono text-xs uppercase tracking-widest">
+        Architected by BaseLayer AI | Powered by Google GenAI
+      </footer>
     </div>
   );
 }
@@ -112,7 +116,7 @@ function Intake({ onReportCreated }: { onReportCreated: (r: FieldReport) => void
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Failed to parse field report.");
+      setError("[ERR_NETWORK] Connection to Google GenAI failed. Retrying...");
     } finally {
       setLoading(false);
     }
@@ -135,8 +139,8 @@ function Intake({ onReportCreated }: { onReportCreated: (r: FieldReport) => void
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="e.g. Received a call from the Guntur rural clinic. They are completely out of first-aid supplies and need 3 people to help with driving logistics immediately. The situation is quite urgent."
-            className="w-full bg-transparent text-[#FAF9F6] p-6 pt-8 font-sans resize-none h-64 focus:outline-none placeholder:text-[#FAF9F6]/20 text-lg font-light leading-relaxed disabled:opacity-50"
+            placeholder=">_ WAITING FOR FIELD INTEL..."
+            className="w-full bg-transparent text-[#FAF9F6] p-6 pt-8 font-mono resize-none h-64 focus:outline-none placeholder:text-[#FAF9F6]/40 text-lg font-light leading-relaxed disabled:opacity-50"
             disabled={loading}
             required
           />
@@ -192,7 +196,7 @@ function Dashboard({ report }: { report: FieldReport }) {
       setMatches(data);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Routing engine offline. Unable to calculate matches.");
+      setError("[ERR_NETWORK] Connection to Google GenAI failed. Retrying...");
     } finally {
       setLoading(false);
     }
@@ -231,8 +235,8 @@ function Dashboard({ report }: { report: FieldReport }) {
               REQUIRED_VECTORS
             </div>
             <div className="flex gap-2 flex-wrap">
-              {report.needs.length === 0 && <span className="font-mono text-sm text-[#FAF9F6]/50">NO_VECTORS_DETECTED</span>}
-              {report.needs.map((need, idx) => (
+              {report.required_vectors.length === 0 && <span className="font-mono text-sm text-[#FAF9F6]/50">NO_VECTORS_DETECTED</span>}
+              {report.required_vectors.map((need, idx) => (
                 <div key={idx} className="border border-[#FAF9F6]/50 px-3 py-1 font-mono text-sm uppercase">
                   {need}
                 </div>
@@ -246,7 +250,7 @@ function Dashboard({ report }: { report: FieldReport }) {
             </div>
             <div className="flex gap-1">
                {[1,2,3,4,5].map(level => (
-                 <div key={level} className={`h-8 flex-1 border border-[#FAF9F6] ${level <= report.urgency ? 'bg-[#FAF9F6]' : 'bg-transparent'}`} />
+                 <div key={level} className={`h-8 flex-1 border border-[#FAF9F6] ${level <= report.urgency_level ? 'bg-[#FAF9F6]' : 'bg-transparent'}`} />
                ))}
             </div>
           </div>
@@ -298,8 +302,8 @@ function Dashboard({ report }: { report: FieldReport }) {
 
                 <div className="flex flex-col md:items-end gap-3 md:w-1/2">
                    <div className="flex gap-2 flex-wrap">
-                    {match.volunteer.skills.map((skill, si) => (
-                      <span key={si} className="border border-[#FAF9F6]/20 px-2 py-0.5 text-[10px] uppercase font-mono text-[#FAF9F6]/80">
+                    {match.volunteer.required_vectors.map((skill, si) => (
+                      <span key={si} className="border border-[#FAF9F6]/20 px-2 py-0.5 text-[10px] uppercase font-mono text-[#FAF9F6]/80 rounded-none">
                         {skill}
                       </span>
                     ))}
