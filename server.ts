@@ -8,14 +8,14 @@ import { GoogleGenAI, Type } from "@google/genai";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+if (!process.env.GEMINI_API_KEY_2) {
+  console.error("FATAL: GEMINI_API_KEY_2 is not defined in environment variables.");
+}
+
 // Initialize Gemini
-let apiKey = process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI;
 try {
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-    throw new Error("API Key is not set or is using the default placeholder.");
-  }
-  ai = new GoogleGenAI({ apiKey });
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_2 });
 } catch (e: any) {
   console.warn("⚠️ Warning: GoogleGenAI initialization failed. Did you configure your API key?");
 }
