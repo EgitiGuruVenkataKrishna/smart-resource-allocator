@@ -1,9 +1,13 @@
-import "dotenv/config";
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { fileURLToPath } from "url";
 import { GoogleGenAI, Type } from "@google/genai";
+import fs from "fs";
+
+// Load dotenv only if not in Vercel/production
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  import("dotenv/config").catch(() => {});
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,11 +17,16 @@ if (!process.env.GEMINI_API_KEY_2) {
 }
 
 // Initialize Gemini
-let ai: GoogleGenAI;
+let ai: GoogleGenAI | null = null;
 try {
-  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_2 });
+  const apiKey = process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+  if (!apiKey) {
+    console.warn("⚠️ Warning: Neither GEMINI_API_KEY_2 nor GEMINI_API_KEY is defined in environment variables.");
+  } else {
+    ai = new GoogleGenAI({ apiKey });
+  }
 } catch (e: any) {
-  console.warn("⚠️ Warning: GoogleGenAI initialization failed. Did you configure your API key?");
+  console.warn("⚠️ Warning: GoogleGenAI initialization failed:", e.message);
 }
 
 const app = express();
@@ -89,7 +98,7 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 // 1. Ingestion Endpoint
 app.post("/api/reports", async (req, res) => {
   if (!ai) {
-    return res.status(500).json({ error: "Gemini API Key is missing or invalid. Please check your AI Studio secrets." });
+    return res.status(500).json({ error: "Gemini API Config Error: Please set GEMINI_API_KEY_2 in your Vercel Environment Variables." });
   }
 
   const { rawText } = req.body;
@@ -155,7 +164,7 @@ app.get("/api/volunteers", (req, res) => {
 // 2. Matching Endpoint
 app.get("/api/matches/:reportId", async (req, res) => {
   if (!ai) {
-    return res.status(500).json({ error: "Gemini API Key is missing or invalid. Please check your AI Studio secrets." });
+    return res.status(500).json({ error: "Gemini API Config Error: Please set GEMINI_API_KEY_2 in your Vercel Environment Variables." });
   }
 
   const reportId = req.params.reportId;
@@ -219,27 +228,36 @@ app.get("/api/matches/:reportId", async (req, res) => {
   }
 });
 
-// Vite Middleware
+// Vite Middleware and Production Serving
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+  if (process.env.VERCEL) {
+    return; // Vercel handles frontend hosting and routing via vercel.json
   }
 
-  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (e) {
+      console.warn("Vite not found, running pure API server");
+    }
+  } else {
+    const distPath = path.join(process.cwd(), "dist");
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
   }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 }
 
 startServer();

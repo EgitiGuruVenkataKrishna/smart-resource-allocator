@@ -106,7 +106,7 @@ function Intake({ onReportCreated }: { onReportCreated: (r: FieldReport) => void
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "API Request Failed");
+        throw new Error(data.error || `API Request Failed: ${res.status}`);
       }
       
       if (data.success && data.report) {
@@ -116,7 +116,7 @@ function Intake({ onReportCreated }: { onReportCreated: (r: FieldReport) => void
       }
     } catch (err: any) {
       console.error(err);
-      setError("[ERR_NETWORK] Connection to Google GenAI failed. Retrying...");
+      setError(err.message || "[ERR_NETWORK] Connection to Google GenAI failed.");
     } finally {
       setLoading(false);
     }
@@ -192,11 +192,11 @@ function Dashboard({ report }: { report: FieldReport }) {
     try {
       const res = await fetch(`/api/matches/${report.report_id}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Match API Failed");
+      if (!res.ok) throw new Error(data.error || `Match API Failed: ${res.status}`);
       setMatches(data);
     } catch (err: any) {
       console.error(err);
-      setError("[ERR_NETWORK] Connection to Google GenAI failed. Retrying...");
+      setError(err.message || "[ERR_NETWORK] Connection to Google GenAI failed.");
     } finally {
       setLoading(false);
     }
